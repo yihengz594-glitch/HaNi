@@ -1,0 +1,9 @@
+{
+  "desc": "拼豆图纸生成器页面地图",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "pages/index/index"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+<view class="custom-page">
+  <view class="custom-head"><view class="eyebrow">人工定制 · 非自动生成</view><view class="title">真人照片转Q版＋拼豆图纸</view><view class="muted">商家收到工单后，人工沟通、制作Q图并交付高清施工图。</view></view>
+  <view wx:if="{{!ready}}" class="custom-card">正在查询服务状态…</view>
+  <view wx:elif="{{!service || !service.canSubmit}}" class="custom-card"><view class="title-small">暂未开放接单</view><view class="muted">商业规则尚待确认；目前仅允许后台授权的测试账号试用。不会自动扣次或生成示例成品。</view><view class="secondary" bindtap="openOrders">查看我的定制</view></view>
+  <view wx:else>
+    <view class="custom-card"><view class="title-small">上传清晰真人照片</view><view class="muted">仅本工单客户与授权商家可访问原图，支持 JPG、PNG、WebP，最多15MB。</view><view class="upload-box" bindtap="choosePhoto"><image wx:if="{{photoPath}}" src="{{photoPath}}" mode="aspectFit" /><view wx:else>＋ 点击选择照片</view></view></view>
+    <view class="custom-card form-card">
+      <view class="title-small">告诉商家你的想法</view>
+      <view class="field"><view>人物数量（1–8人）</view><input type="number" value="{{persons}}" data-field="persons" bindinput="onFieldInput" /></view>
+      <view class="field"><view>Q版风格</view><input maxlength="120" placeholder="如：圆润、可爱、简洁" value="{{style}}" data-field="style" bindinput="onFieldInput" /></view>
+      <view class="field"><view>需要保留的特征</view><textarea maxlength="600" placeholder="如：眼镜、发型、服装、表情" value="{{features}}" data-field="features" bindinput="onFieldInput" /></view>
+      <view class="field"><view>图纸尺寸要求</view><input maxlength="80" placeholder="如：52×52或64×64格" value="{{size}}" data-field="size" bindinput="onFieldInput" /></view>
+      <view class="field"><view>其他说明（可选）</view><textarea maxlength="800" placeholder="如：背景、构图、用途" value="{{notes}}" data-field="notes" bindinput="onFieldInput" /></view>
+    </view>
+    <view class="custom-card"><view class="title-small">交付与次数规则</view><view>预计 {{service.deliveryDays}} 天内交付；免费修改 {{service.includedRevisions}} 次。</view><view>{{service.chargeLabel}}</view><view class="muted">拒单或待接单阶段取消会释放预占。直接制图和人工定制分开记账；永久卡/旧会员不自动包含人工服务。</view></view>
+    <view class="custom-card"><view class="title-small">照片处理与隐私</view><view class="muted">{{service.privacyNotice}}</view><view class="muted">完成、拒单或取消后，私有文件保留 {{service.retentionDays}} 天再删除；不经许可不展示案例。</view>
+      <view class="confirm-row"><text>照片包含未成年人</text><switch checked="{{minorInPhoto}}" data-field="minorInPhoto" bindchange="onSwitchChange" /></view>
+      <view wx:if="{{minorInPhoto}}" class="confirm-row"><text>我已取得监护人同意</text><switch checked="{{guardianConfirmed}}" data-field="guardianConfirmed" bindchange="onSwitchChange" /></view>
+      <view class="confirm-row"><text>同意商家人工使用第三方图像工具处理照片</text><switch checked="{{consentHumanThirdParty}}" data-field="consentHumanThirdParty" bindchange="onSwitchChange" /></view>
+      <view class="confirm-row"><text>我已确认交付、修改及扣次规则</text><switch checked="{{confirmTerms}}" data-field="confirmTerms" bindchange="onSwitchChange" /></view>
+    </view>
+    <button class="primary" disabled="{{busy}}" bindtap="submit">{{busy ? '正在提交…' : '确认并提交人工定制工单'}}</button>
+    <view class="secondary" bindtap="openOrders">我的定制</view>
+  </view>
+</view>

@@ -1,0 +1,9 @@
+<view class="custom-page"><view class="custom-head"><view class="eyebrow">真人Q版 · 人工定制</view><view class="title">我的定制</view><view class="muted">在每个工单内查看进度、沟通与下载交付文件。</view></view>
+  <view wx:if="{{loading}}" class="custom-card">正在加载工单…</view>
+  <view wx:elif="{{!orders.length}}" class="custom-card"><view class="title-small">还没有工单</view><view class="muted">提交清晰照片和需求后，商家会人工接单。</view></view>
+  <view wx:for="{{orders}}" wx:key="id" class="custom-card order-item" data-id="{{item.id}}" bindtap="openOrder">
+    <view class="row"><view class="title-small">{{item.persons}}人 · {{item.style}}</view><view class="status">{{item.statusLabel}}</view></view>
+    <view class="muted">{{item.createdAt}} · {{item.id}}</view><view wx:if="{{item.unread}}" class="unread">有新消息或进度更新</view>
+  </view>
+  <button class="primary" bindtap="openSubmit">新建人工定制</button>
+</view>

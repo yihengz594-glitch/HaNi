@@ -1,0 +1,73 @@
+<view class="gallery-page">
+  <view class="gallery-heading">
+    <view>
+      <view class="gallery-kicker">仅作灵感展示</view>
+      <view class="gallery-title">{{title}}</view>
+    </view>
+    <view class="gallery-close" bindtap="closePage">关闭</view>
+  </view>
+
+  <view wx:if="{{mode === 'tray'}}" class="gallery-tray">
+    <view class="tray-handle"></view>
+    <view class="tray-title">左右滑动查看作品</view>
+    <scroll-view class="tray-scroll" scroll-x>
+      <view class="tray-track">
+        <view wx:for="{{examples}}" wx:key="id" class="example-card tray-card">
+          <view class="example-image-wrap" data-index="{{index}}" bindtap="showLargeImage">
+            <image wx:if="{{item.renderImage && !item.failed}}" src="{{item.url}}" mode="aspectFit" data-index="{{index}}" bindload="markImageLoaded" binderror="markImageFailed" />
+            <view wx:if="{{!item.loaded && !item.failed}}" class="image-state">正在加载作品…</view>
+            <view wx:if="{{item.failed}}" class="image-state failed" data-index="{{index}}" catchtap="retryImage">加载失败，点击重试</view>
+          </view>
+          <view class="example-label">{{item.name}}</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view wx:elif="{{mode === 'cards'}}" class="example-grid">
+    <view wx:for="{{examples}}" wx:key="id" class="example-card">
+      <view class="example-image-wrap" data-index="{{index}}" bindtap="showLargeImage">
+        <image wx:if="{{item.renderImage && !item.failed}}" src="{{item.url}}" mode="aspectFit" data-index="{{index}}" bindload="markImageLoaded" binderror="markImageFailed" />
+        <view wx:if="{{!item.loaded && !item.failed}}" class="image-state">正在加载作品…</view>
+        <view wx:if="{{item.failed}}" class="image-state failed" data-index="{{index}}" catchtap="retryImage">加载失败，点击重试</view>
+      </view>
+      <view class="example-label">{{item.name}} · 点击放大</view>
+    </view>
+  </view>
+
+  <view wx:elif="{{mode === 'stepper' && currentItem}}" class="stepper-view">
+    <view class="stepper-frame" data-index="{{currentIndex}}" bindtap="showLargeImage">
+      <image wx:if="{{currentItem.renderImage && !currentItem.failed}}" src="{{currentItem.url}}" mode="aspectFit" data-index="{{currentIndex}}" bindload="markImageLoaded" binderror="markImageFailed" />
+      <view wx:if="{{!currentItem.loaded && !currentItem.failed}}" class="image-state">正在加载作品…</view>
+      <view wx:if="{{currentItem.failed}}" class="image-state failed" data-index="{{currentIndex}}" catchtap="retryImage">加载失败，点击重试</view>
+    </view>
+    <view class="stepper-controls">
+      <view class="stepper-button" bindtap="previousExample">‹ 上一张</view>
+      <view class="stepper-page">{{currentIndex + 1}} / {{examples.length}}</view>
+      <view class="stepper-button" bindtap="nextExample">下一张 ›</view>
+    </view>
+    <view class="stepper-hint">点击作品可高清放大</view>
+  </view>
+
+  <view wx:elif="{{mode === 'preview' && currentItem}}" class="single-preview">
+    <view class="preview-frame" data-index="{{currentIndex}}" bindtap="showLargeImage">
+      <image wx:if="{{currentItem.renderImage && !currentItem.failed}}" src="{{currentItem.url}}" mode="widthFix" data-index="{{currentIndex}}" bindload="markImageLoaded" binderror="markImageFailed" />
+      <view wx:if="{{!currentItem.loaded && !currentItem.failed}}" class="image-state">正在加载高清图…</view>
+      <view wx:if="{{currentItem.failed}}" class="image-state failed" data-index="{{currentIndex}}" catchtap="retryImage">加载失败，点击重试</view>
+    </view>
+    <view class="stepper-hint">点击图片放大查看</view>
+  </view>
+
+  <view wx:elif="{{mode === 'all'}}" class="example-grid all-examples">
+    <view wx:for="{{examples}}" wx:key="id" class="example-card">
+      <view class="example-image-wrap" data-index="{{index}}" bindtap="showLargeImage">
+        <image wx:if="{{item.renderImage && !item.failed}}" src="{{item.thumb}}" mode="aspectFit" data-index="{{index}}" bindload="markImageLoaded" binderror="markImageFailed" />
+        <view wx:if="{{!item.loaded && !item.failed}}" class="image-state">正在加载作品…</view>
+        <view wx:if="{{item.failed}}" class="image-state failed" data-index="{{index}}" catchtap="retryImage">加载失败，点击重试</view>
+      </view>
+      <view class="example-label">{{item.name}} · 点击放大</view>
+    </view>
+  </view>
+
+  <view class="gallery-footnote">静态作品示例，不代表实时 AI 生成结果</view>
+</view>

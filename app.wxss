@@ -1,0 +1,23 @@
+page {
+  background: #f3f4f6;
+  color: #16171b;
+  /* 中文系统字体优先，保证中文笔画和字重在各端更统一。 */
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  line-height: 1;
+  font-family: inherit;
+  background: transparent;
+}
+
+button::after {
+  border: 0;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}

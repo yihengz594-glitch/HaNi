@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="same-origin">
+  <title>拼豆兑换码管理</title>
+  <link rel="stylesheet" href="/admin/admin.css">
+  <script defer src="/admin/admin.js"></script>
+</head>
+<body>
+  <main class="page-shell">
+    <section id="loginPanel" class="login-card">
+      <div class="eyebrow">PINBEAD · ADMIN</div>
+      <h1>管理后台</h1>
+      <p>兑换码、账户权益与交易记录</p>
+      <form id="loginForm">
+        <label>管理员账号<input name="username" autocomplete="username" required maxlength="80"></label>
+        <label>管理员密码<input name="password" type="password" autocomplete="current-password" required maxlength="1024"></label>
+        <button class="primary" type="submit">安全登录</button>
+      </form>
+    </section>
+
+    <section id="dashboard" hidden>
+      <header class="topbar">
+        <div><div class="eyebrow">PINBEAD · ADMIN</div><h1>兑换码管理</h1></div>
+        <div class="top-actions"><span id="adminName" class="muted"></span><button id="logoutButton" class="quiet">退出</button></div>
+      </header>
+
+      <div class="stats-grid">
+        <article class="stat-card"><span>兑换码批次</span><strong id="batchCount">—</strong></article>
+        <article class="stat-card"><span>用户记录</span><strong id="userCount">—</strong></article>
+        <article class="stat-card"><span>当前套餐</span><strong>4 档</strong></article>
+      </div>
+
+      <nav class="tabs" aria-label="管理模块">
+        <button class="tab active" data-panel="codesPanel">兑换码</button>
+        <button class="tab" data-panel="usersPanel">用户权益</button>
+        <button class="tab" data-panel="logsPanel">交易与审计</button>
+      </nav>
+
+      <section id="codesPanel" class="panel">
+        <div class="section-head"><div><h2>新建兑换码</h2><p>每批最多 500 个；明文只在创建结果页展示一次。</p></div></div>
+        <form id="batchForm" class="batch-form">
+          <label>权益套餐<select id="productId" name="productId" required></select></label>
+          <label>本批数量<input name="count" type="number" min="1" max="500" value="1" required></label>
+          <label>批次备注<input name="note" maxlength="240" placeholder="例如：活动、渠道或用途"></label>
+          <label>兑换截止时间（可选）<input name="expiresAt" type="datetime-local"></label>
+          <button class="primary" type="submit">生成兑换码</button>
+        </form>
+
+        <div id="newBatchResult" class="one-time-result" hidden>
+          <div class="section-head"><div><h3 id="newBatchTitle">本次新建的兑换码</h3><p>请立即导出并妥善保存；关闭页面后不能再次读取明文。</p></div><button id="exportCodes" class="secondary">导出 CSV</button></div>
+          <textarea id="plainCodes" readonly spellcheck="false"></textarea>
+        </div>
+
+        <div class="section-head list-head"><div><h2>兑换码批次</h2><p>状态统计会将到期但未兑换的码单独列出。</p></div><button id="refreshBatches" class="secondary">刷新</button></div>
+        <div class="table-wrap"><table><thead><tr><th>商品 / 备注</th><th>数量</th><th>未兑换</th><th>已兑换</th><th>停用 / 过期</th><th>创建时间</th><th>操作</th></tr></thead><tbody id="batchesRows"></tbody></table></div>
+
+        <div class="section-head list-head"><div><h2>兑换码查询</h2><p>明文不回传；已兑换码不能通过停用撤销权益。</p></div><div class="filters"><select id="batchFilter"><option value="">全部批次</option></select><select id="statusFilter"><option value="">全部状态</option><option value="UNREDEEMED">未兑换</option><option value="REDEEMED">已兑换</option><option value="DISABLED">已停用</option><option value="EXPIRED">已过期</option></select><button id="refreshCodes" class="secondary">查询</button></div></div>
+        <div class="table-wrap"><table><thead><tr><th>商品</th><th>状态</th><th>兑换用户</th><th>兑换时间</th><th>截止时间</th><th>操作</th></tr></thead><tbody id="codesRows"></tbody></table></div>
+      </section>
+
+      <section id="usersPanel" class="panel" hidden>
+        <div class="section-head"><div><h2>用户权益查询</h2><p>只显示 OpenID 后四位；余额为扣除预占后的可用次数。</p></div></div>
+        <form id="userSearchForm" class="search-row"><input id="userQuery" placeholder="搜索用户 UUID 或 OpenID" maxlength="80"><button class="secondary" type="submit">搜索用户</button></form>
+        <div class="table-wrap"><table><thead><tr><th>用户编号</th><th>OpenID 尾号</th><th>剩余次数</th><th>预占</th><th>永久权益</th><th>注册时间</th><th></th></tr></thead><tbody id="usersRows"></tbody></table></div>
+        <article id="userDetail" class="detail-card" hidden></article>
+        <div class="section-head list-head"><div><h2>人工工单特殊退次</h2><p>仅限已完成且已结算的工单；必须填写原因，系统会记账并审计，重复退款会被拒绝。</p></div></div>
+        <form id="customRefundForm" class="batch-form">
+          <label>工单 UUID<input name="orderId" required maxlength="36" placeholder="工单编号"></label>
+          <label>退款原因<input name="reason" required maxlength="500" placeholder="请填写真实原因"></label>
+          <button class="secondary danger" type="submit">特殊退回次数</button>
+        </form>
+      </section>
+
+      <section id="logsPanel" class="panel" hidden>
+        <div class="section-head"><div><h2>交易与操作记录</h2><p>购买、兑换、使用和管理员操作记录；不显示兑换码明文。</p></div><button id="refreshLogs" class="secondary">刷新</button></div>
+        <h3>交易记录</h3><div id="transactionsList" class="record-list"></div>
+        <h3 class="spaced">管理员审计记录</h3><div id="auditList" class="record-list"></div>
+      </section>
+      <footer>商品金额与权益由服务端商品配置决定 · 管理操作会写入审计记录</footer>
+    </section>
+  </main>
+  <div id="toast" class="toast toast-global" role="status" aria-live="polite"></div>
+</body>
+</html>

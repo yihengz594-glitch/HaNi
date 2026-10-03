@@ -1,0 +1,413 @@
+<view class="app-shell safe-bottom">
+  <view class="topbar">
+    <view class="topbar-title">{{pageTitle}}</view>
+    <view class="topbar-action" bindtap="showShareHint">分享</view>
+  </view>
+
+  <view wx:if="{{activeTab === 'home'}}" class="tab-panel home-panel">
+    <view class="hero-card">
+      <view class="hero-art">
+        <image wx:if="{{!homeHeroFailed}}" class="hero-image" src="{{homeHeroImage}}" mode="widthFix" bindload="onHomeHeroLoad" binderror="onHomeHeroError" />
+        <view wx:if="{{!homeHeroLoaded && !homeHeroFailed}}" class="home-image-state">正在加载插画…</view>
+        <view wx:if="{{homeHeroFailed}}" class="home-image-state failed" bindtap="retryHomeHero">主视觉加载失败，点击重试</view>
+      </view>
+      <view class="hero-copy">
+        <view class="hero-eyebrow">猫咪拼豆工作台</view>
+        <view class="hero-title">AI <text class="hero-title-accent">拼豆图纸</text></view>
+        <view class="hero-subtitle">上传喜欢的图片，生成可按 MARD 色号制作的拼豆图纸。</view>
+      </view>
+    </view>
+
+    <view class="manual-service-entry" bindtap="goCustomSubmit">
+      <view><view class="manual-service-title">真人转Q版 · 人工定制</view><view class="manual-service-caption">上传照片 → 人工沟通制作 → 确认Q图 → 交付拼豆图纸</view><view class="manual-service-status">{{customServiceLabel}}</view></view>
+      <view class="manual-service-arrow">›</view>
+    </view>
+
+    <view class="home-cta" bindtap="goMake">
+      <view class="cta-icon">✦</view>
+      <view class="cta-label">立即制作</view>
+      <view class="cta-arrow">↗</view>
+    </view>
+
+    <view class="gallery-guide-card" bindtap="openGallery" data-group="all">
+      <image wx:if="{{!homeGuideFailed}}" class="gallery-guide-image" src="{{galleryGuideImage}}" mode="widthFix" bindload="onHomeGuideLoad" binderror="onHomeGuideError" />
+      <view wx:if="{{!homeGuideLoaded && !homeGuideFailed}}" class="home-image-state">正在加载示例说明…</view>
+      <view wx:if="{{homeGuideFailed}}" class="home-image-state failed" catchtap="retryHomeGuide">说明图加载失败，点击重试</view>
+    </view>
+
+    <view class="section-head">
+      <view>
+        <view class="section-kicker">猫咪灵感</view>
+        <view class="section-title">插画展示</view>
+        <view class="section-caption">仅作灵感展示，不会改变图纸生成参数</view>
+      </view>
+      <view class="section-count">{{homeIllustrations.length}} 张</view>
+    </view>
+
+    <view class="illustration-grid">
+      <view wx:for="{{homeIllustrations}}" wx:key="image" class="illustration-card" bindtap="openGallery" data-group="{{item.group}}">
+        <image wx:if="{{item.renderImage && !item.failed}}" class="illustration-image" src="{{item.image}}" mode="aspectFit" data-index="{{index}}" bindload="onHomeIllustrationLoad" binderror="onHomeIllustrationError" />
+        <view wx:if="{{!item.loaded && !item.failed}}" class="home-image-state">正在加载插画…</view>
+        <view wx:if="{{item.failed}}" class="home-image-state failed" data-index="{{index}}" catchtap="retryHomeIllustration">加载失败，点击重试</view>
+      </view>
+    </view>
+    <view wx:if="{{expandedIllustrationGroup === '4'}}" class="inline-example-panel">
+      <view class="inline-example-head"><view>作品示例</view><view bindtap="openGallery" data-group="4">收起 ×</view></view>
+      <view class="inline-example-grid">
+        <view wx:for="{{expandedGalleryItems}}" wx:key="index" class="inline-example-tile" data-index="{{item.index}}" bindtap="previewExpandedExample">
+          <image src="{{item.image}}" mode="aspectFit" />
+        </view>
+      </view>
+    </view>
+
+    <view class="mini-note"><view class="note-dot"></view>点击插画查看现有作品图库，不会带入制图参数或扣次</view>
+  </view>
+
+  <view wx:if="{{activeTab === 'make'}}" class="tab-panel make-panel">
+    <view class="page-intro">
+      <view class="page-overline">拼豆工作室</view>
+      <view class="page-title">拼豆制作</view>
+      <view class="page-subtitle">把喜欢的图片变成自己的拼豆作品</view>
+    </view>
+
+    <view class="studio-stats">
+      <view class="studio-stat"><view class="studio-stat-icon icon-purple">✦</view><view><view class="studio-stat-value">MARD 221</view><view class="studio-stat-label">经典色板</view></view></view>
+        <view class="studio-stat"><view class="studio-stat-icon icon-green">↗</view><view><view class="studio-stat-value">8–{{maxGridSize}} 格</view><view class="studio-stat-label">自定义尺寸范围</view></view></view>
+    </view>
+
+    <view wx:if="{{!imagePath}}" class="upload-card-pro" bindtap="chooseImage">
+      <view class="upload-corner upload-corner-one"></view>
+      <view class="upload-corner upload-corner-two"></view>
+      <view class="upload-gradient-icon">＋</view>
+      <view class="upload-title-pro">点击上传图片</view>
+      <view class="upload-hint-pro">支持拍照或从手机相册选择</view>
+      <view class="upload-footnote"><view class="note-dot"></view>{{localGenerationMode ? '开发版仅在本机生成，不扣次、不创建服务端任务' : '确认生成后上传服务端处理；失败任务不收费'}}</view>
+    </view>
+
+    <view wx:else class="selected-image-card">
+      <view class="selected-image-head">
+        <view>
+          <view class="selected-label">已选择图片</view>
+          <view class="selected-sublabel">可以重新选择或直接生成</view>
+        </view>
+        <view class="image-status">就绪</view>
+      </view>
+      <image class="image-preview" src="{{imagePath}}" mode="aspectFit" />
+      <view class="image-actions">
+        <view class="secondary-button" bindtap="chooseImage">重新选择</view>
+        <view class="secondary-button" bindtap="clearAll">清空</view>
+      </view>
+    </view>
+
+    <view wx:if="{{!imagePath}}" class="recent-card">
+      <view class="recent-head">
+        <view class="section-title">最近 AI 图</view>
+        <view class="recent-hint">点击后直接设置参数</view>
+      </view>
+      <view class="recent-empty"><view class="recent-empty-icon">✦</view>暂无生成记录</view>
+    </view>
+
+    <view wx:if="{{!imagePath}}" class="section-head make-feature-head">
+      <view>
+        <view class="section-kicker">工具箱</view>
+        <view class="section-title">更多功能</view>
+        <view class="section-caption">先做图，更多能力逐步开放</view>
+      </view>
+    </view>
+
+    <view wx:if="{{!imagePath}}" class="feature-grid">
+      <view wx:for="{{featureItems}}" wx:key="name" class="feature-card" bindtap="onFeatureTap" data-feature="{{item.name}}">
+        <view class="feature-index">0{{index + 1}}</view>
+        <view class="feature-icon feature-icon-{{item.theme}}">{{item.icon}}</view>
+        <view class="feature-name">{{item.name}}</view>
+        <view class="feature-description">{{item.description}}</view>
+      </view>
+    </view>
+
+    <view wx:if="{{imagePath && !editing}}" class="settings-card-pro">
+      <view class="settings-head">
+        <view>
+          <view class="section-title">设置图纸</view>
+          <view class="section-caption">尺寸由你选择；生成时不会自动改动</view>
+        </view>
+        <view class="palette-badge">{{paletteStandard}} {{paletteSpec}}</view>
+      </view>
+      <view class="mode-switch">
+        <view class="mode-item {{sizeMode === 'image' ? 'active' : ''}}" data-mode="image" bindtap="onSizeModeTap">按图片比例</view>
+        <view class="mode-item {{sizeMode === 'board' ? 'active' : ''}}" data-mode="board" bindtap="onSizeModeTap">按豆板比例</view>
+      </view>
+      <view class="setting-row setting-row-action" bindtap="openSizeSheet">
+        <view class="setting-row-label">尺寸</view>
+        <view class="setting-row-value">{{gridWidth}}×{{gridHeight}} <text class="setting-row-arrow">›</text></view>
+      </view>
+      <view class="setting-grid-two">
+        <view class="setting-row setting-row-action" bindtap="openPaletteSheet">
+          <view class="setting-row-label">色号标准</view>
+          <view class="setting-row-value">{{paletteStandard}} <text class="setting-row-arrow">›</text></view>
+        </view>
+        <view class="setting-row setting-row-action" bindtap="openPaletteSheet">
+          <view class="setting-row-label">色号规格</view>
+          <view class="setting-row-value">{{paletteSpec}}色 <text class="setting-row-arrow">›</text></view>
+        </view>
+      </view>
+      <view class="setting-row setting-row-action" bindtap="openThresholdSheet">
+        <view>
+          <view class="setting-row-label">颜色合并阈值</view>
+          <view class="setting-row-hint">减少相近色号，图面更干净</view>
+        </view>
+        <view class="setting-row-value">{{thresholdName}} <text class="setting-row-arrow">›</text></view>
+      </view>
+    </view>
+
+    <button wx:if="{{imagePath && !editing}}" class="primary-button {{!imagePath || generating ? 'disabled' : ''}}" bindtap="generatePattern" disabled="{{!imagePath || generating}}">
+      {{generating ? '正在生成…' : '生成拼豆图纸'}}
+    </button>
+
+    <view class="result-card {{patternReady ? '' : 'result-card-preload'}}">
+      <view wx:if="{{patternReady}}" class="result-heading">
+        <view>
+          <view class="section-title">图纸预览</view>
+          <view class="result-meta">{{gridWidth}} × {{gridHeight}} 格 · {{paletteStandard}} 最近色号 · 共 {{totalBeads}} 颗豆{{editing ? '（编辑副本）' : ''}}</view>
+        </view>
+        <view wx:if="{{!editing}}" class="result-edit-shortcut" bindtap="startPatternEdit">编辑图纸</view>
+        <view wx:else class="tip-badge">每格显示色号</view>
+      </view>
+
+      <view wx:if="{{patternReady && !editing}}" class="view-switch">
+        <view class="view-tab {{viewMode === 'sheet' ? 'active' : ''}}" data-mode="sheet" bindtap="onViewModeTap">图纸模式</view>
+        <view class="view-tab {{viewMode === 'bead' ? 'active' : ''}}" data-mode="bead" bindtap="onViewModeTap">颗粒效果</view>
+      </view>
+
+      <view wx:if="{{editing}}" class="editor-toolbar">
+        <view class="editor-tool {{editorTool === 'brush' ? 'active' : ''}}" data-tool="brush" bindtap="onEditorToolTap">画笔</view>
+        <view class="editor-tool {{editorTool === 'pan' ? 'active' : ''}}" data-tool="pan" bindtap="onEditorToolTap">移动</view>
+        <view class="editor-tool {{editorTool === 'pick' ? 'active' : ''}}" data-tool="pick" bindtap="onEditorToolTap">吸管</view>
+        <view class="editor-tool {{editorTool === 'erase' ? 'active' : ''}}" data-tool="erase" bindtap="onEditorToolTap">橡皮擦</view>
+      </view>
+      <view wx:if="{{editing}}" class="editor-toolbar editor-toolbar-secondary">
+        <view class="editor-color-button" bindtap="openEditorPalette"><view class="editor-color-swatch" style="background: {{editorColorHex}};"></view>MARD {{editorColorCode}} · 选色</view>
+        <view class="editor-tool" data-action="out" bindtap="onEditorZoomTap">－</view>
+        <view class="editor-zoom-label">{{editorScale}}×</view>
+        <view class="editor-tool" data-action="in" bindtap="onEditorZoomTap">＋</view>
+        <view class="editor-tool" data-action="reset" bindtap="onEditorZoomTap">适配</view>
+      </view>
+      <view wx:if="{{editing}}" class="editor-hint">单指涂色或移动；双指可缩放。空格用“·”表示，白色拼豆显示真实色号。</view>
+
+      <view class="canvas-shell {{patternReady ? '' : 'canvas-shell-preload'}}">
+        <view id="editorViewport" class="editor-viewport">
+          <canvas id="patternCanvas" type="2d" class="pattern-canvas" style="display: {{editorPaletteVisible ? 'none' : 'block'}}; transform: translate({{editorOffsetX}}px, {{editorOffsetY}}px) scale({{editorScale}});"></canvas>
+          <view wx:if="{{editing}}" class="editor-touch-layer" catchtouchstart="editorTouchStart" catchtouchmove="editorTouchMove" catchtouchend="editorTouchEnd" catchtouchcancel="editorTouchEnd" catchtap="editorCanvasTap"></view>
+        </view>
+      </view>
+      <canvas id="exportCanvas" type="2d" class="export-canvas"></canvas>
+
+      <view wx:if="{{editing}}" class="editor-toolbar editor-history">
+        <view class="editor-tool {{editorCanUndo ? '' : 'muted'}}" bindtap="undoPatternEdit">撤销</view>
+        <view class="editor-tool {{editorCanRedo ? '' : 'muted'}}" bindtap="redoPatternEdit">重做</view>
+        <view class="editor-tool" bindtap="restoreOriginalPattern">恢复原图</view>
+      </view>
+
+      <view wx:if="{{patternReady}}" class="legend-title-row">
+        <view class="legend-title">用色清单</view>
+        <view class="legend-subtitle">MARD 色号 · 共 {{colorStats.length}} 种</view>
+      </view>
+      <view wx:if="{{patternReady}}" class="legend-list">
+        <view wx:for="{{colorStats}}" wx:key="code" class="legend-item">
+          <view class="swatch" style="background: {{item.hex}};"></view>
+          <view class="legend-main">
+            <view class="legend-name">{{item.code}}</view>
+            <view class="legend-hex">{{item.hex}}</view>
+          </view>
+          <view class="legend-count">{{item.count}}颗 · 备{{item.backup}}</view>
+        </view>
+      </view>
+
+      <view wx:if="{{patternReady && !editing}}" class="result-actions">
+        <view class="outline-button" bindtap="startPatternEdit">编辑图纸</view>
+        <view wx:if="{{imagePath}}" class="outline-button" bindtap="generatePattern">重新生成</view>
+        <view class="primary-small-button" bindtap="savePattern">{{viewMode === 'bead' ? '保存高清颗粒图' : '保存高清图纸'}}</view>
+      </view>
+      <view wx:if="{{editing}}" class="result-actions editor-save-actions">
+        <view class="outline-button" bindtap="cancelPatternEdit">放弃修改</view>
+        <view class="primary-small-button" bindtap="savePatternEdit">保存修改</view>
+      </view>
+    </view>
+
+    <view wx:if="{{imagePath && !patternReady}}" class="make-tip-card">
+      <view class="tip-icon">✦</view>
+      <view>
+        <view class="tip-title">准备好了吗？</view>
+        <view class="tip-description">点击生成后，你会看到带色号的拼豆网格和用色清单。</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{activeTab === 'mine'}}" class="tab-panel mine-panel">
+    <view class="member-card">
+      <view class="member-topline">
+        <view class="member-status">{{memberProfile.statusLabel}}</view>
+        <view class="member-note">{{memberProfile.note}}</view>
+      </view>
+      <view class="member-title">{{memberProfile.title}}</view>
+      <view class="member-description">{{memberProfile.description}}</view>
+      <view wx:if="{{memberProfile.daysRemaining > 0}}" class="member-expiry">{{memberProfile.planName}} · 剩余 {{memberProfile.daysRemaining}} 天<text wx:if="{{memberProfile.expiresAt}}"> · 到期 {{memberProfile.expiresAt}}</text></view>
+      <view class="member-features">
+        <view wx:if="{{memberProfile.permanentEntitlement}}">永久权益 · 生成不限次数</view>
+        <view wx:else>剩余次数：{{memberProfile.creditsRemaining}}次</view>
+        <view>生成成功后结算</view>
+      </view>
+      <view class="member-art">
+        <view class="member-orb orb-purple"></view>
+        <view class="member-orb orb-green"></view>
+        <view class="member-orb orb-blue"></view>
+      </view>
+    </view>
+
+    <view class="section-head plan-head">
+      <view>
+        <view class="section-title">选择套餐</view>
+        <view class="section-caption">次数卡不限期限 · 永久卡不限次数</view>
+      </view>
+      <view class="payment-mode-label">{{paymentModeLabel}}</view>
+    </view>
+    <view class="catalog-status">{{productCatalogStatus}}</view>
+    <view class="plan-list">
+      <view wx:for="{{membershipOptions}}" wx:key="id" class="plan-card {{item.featured ? 'plan-card-featured' : ''}}">
+        <view class="plan-copy">
+          <view class="plan-name">{{item.name}} <text wx:if="{{item.badge}}" class="plan-badge">{{item.badge}}</text></view>
+          <view class="plan-description">{{item.description}}</view>
+        </view>
+        <view class="plan-purchase">
+          <view class="plan-price">{{item.priceLabel}}</view>
+          <view class="plan-action {{paymentBusy || (memberProfile.permanentEntitlement && item.productType === 'PERMANENT') ? 'plan-action-disabled' : ''}}" data-product-id="{{item.id}}" bindtap="buyMembershipPlan">{{memberProfile.permanentEntitlement && item.productType === 'PERMANENT' ? '已开通' : '购买'}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="manual-service-entry" bindtap="goCustomList"><view><view class="manual-service-title">我的人工定制</view><view class="manual-service-caption">查看订单、与商家沟通、确认Q图和保存高清成品</view></view><view class="manual-service-arrow">›</view></view>
+    <view wx:if="{{customServiceMerchant}}" class="manual-service-entry" bindtap="goCustomMerchant"><view><view class="manual-service-title">商家工单工作台</view><view class="manual-service-caption">仅服务端授权商家可访问</view></view><view class="manual-service-arrow">›</view></view>
+
+    <view class="recent-work-card">
+      <view class="recent-head">
+        <view class="section-title">最近生成</view>
+        <view class="recent-hint">最多保留 {{recentLimit}} 张，本机缓存</view>
+      </view>
+      <view wx:if="{{recentWorks.length}}" class="recent-work-grid">
+        <view wx:for="{{recentWorks}}" wx:key="id" class="recent-work-tile" bindtap="openRecentWork" data-id="{{item.id}}">
+          <view class="recent-work-preview">
+            <image wx:if="{{item.previewPath}}" class="recent-work-image" src="{{item.previewPath}}" mode="aspectFill" />
+            <view wx:else class="recent-work-icon">▦</view>
+            <view class="recent-delete" catchtap="deleteRecentWork" data-id="{{item.id}}">删</view>
+          </view>
+          <view class="recent-work-name">{{item.name}}</view>
+          <view class="recent-work-meta">{{item.timeLabel}}</view>
+          <view class="recent-work-actions">
+            <view catchtap="openRecentWork" data-id="{{item.id}}">查看</view>
+            <view catchtap="reExportRecentWork" data-id="{{item.id}}">导出</view>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="recent-empty"><view class="recent-empty-icon">✦</view>生成成功后会自动保存在这里</view>
+    </view>
+
+    <view class="account-history-card" bindtap="openAccountHistory">
+      <view><view class="redeem-title">购买、兑换与使用记录</view><view class="redeem-caption">查看服务端账户流水</view></view>
+      <view class="redeem-button">查看</view>
+    </view>
+
+    <view class="redeem-card" bindtap="openRedeem">
+      <view>
+        <view class="redeem-title">已有兑换码</view>
+        <view class="redeem-caption">输入次数卡或永久卡兑换码</view>
+      </view>
+      <view class="redeem-button">兑换</view>
+    </view>
+  </view>
+
+  <view wx:if="{{!editing}}" class="bottom-nav">
+    <view wx:for="{{navItems}}" wx:key="key" class="nav-item {{activeTab === item.key ? 'active' : ''}}" data-tab="{{item.key}}" bindtap="onTabTap">
+      <view wx:if="{{activeTab === item.key}}" class="nav-active-line"></view>
+      <view class="nav-icon nav-icon-{{item.theme}}">{{item.icon}}</view>
+      <view class="nav-label">{{item.name}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{editorPaletteVisible}}" class="editor-palette-mask" catchtap="closeEditorPalette">
+    <view class="editor-palette-sheet" catchtap="stopSheetTap">
+      <view class="editor-palette-head"><view>MARD 色号（空格请用橡皮擦）</view><view bindtap="closeEditorPalette">完成</view></view>
+      <input class="editor-palette-search" placeholder="搜索色号，如 H2" value="{{editorPaletteSearch}}" bindinput="onEditorPaletteSearch" />
+      <scroll-view scroll-y="true" class="editor-palette-scroll">
+        <view class="editor-palette-grid">
+          <view wx:for="{{editorPaletteOptions}}" wx:key="code" class="editor-palette-item {{editorColorCode === item.code ? 'active' : ''}}" data-code="{{item.code}}" bindtap="onEditorColorTap">
+            <view class="editor-palette-swatch" style="background: {{item.hex}};"></view><view>{{item.code}}</view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <view wx:if="{{sheetType}}" class="sheet-mask" catchtap="closeSettingsSheet">
+    <view class="bottom-sheet" catchtap="stopSheetTap">
+      <view class="sheet-handle"></view>
+      <view class="sheet-head">
+        <view class="sheet-title" wx:if="{{sheetType === 'size'}}">选择豆板尺寸</view>
+        <view class="sheet-title" wx:if="{{sheetType === 'palette'}}">选择色号规格</view>
+        <view class="sheet-title" wx:if="{{sheetType === 'threshold'}}">选择颜色合并阈值</view>
+        <view class="sheet-close" bindtap="closeSettingsSheet">×</view>
+      </view>
+
+      <view wx:if="{{sheetType === 'size'}}">
+        <view class="sheet-size-grid">
+          <view wx:for="{{sizeOptions}}" wx:key="label" class="sheet-size-option {{gridWidth === item.width && gridHeight === item.height ? 'active' : ''}}" data-width="{{item.width}}" data-height="{{item.height}}" bindtap="onSizeTap">{{item.label}}</view>
+        </view>
+        <view class="custom-size-title">自定义尺寸</view>
+        <view class="custom-size-row">
+          <view class="custom-input-wrap"><text>宽</text><input type="number" maxlength="3" value="{{customWidth}}" data-field="width" bindinput="onCustomSizeInput" /></view>
+          <text class="custom-size-x">×</text>
+          <view class="custom-input-wrap"><text>高</text><input type="number" maxlength="3" value="{{customHeight}}" data-field="height" bindinput="onCustomSizeInput" /></view>
+        </view>
+        <view class="sheet-confirm" bindtap="confirmCustomSize">确定尺寸</view>
+      </view>
+
+      <view wx:if="{{sheetType === 'palette'}}" class="sheet-list">
+        <view wx:for="{{paletteOptions}}" wx:key="value" class="sheet-list-item {{paletteSpec === item.value ? 'active' : ''}}" data-spec="{{item.value}}" bindtap="onPaletteTap">
+          <view><view class="sheet-list-name">{{item.name}} <text wx:if="{{item.value === '221'}}" class="recommend-tag">推荐</text></view><view class="sheet-list-desc">{{item.description}}</view></view>
+          <view wx:if="{{paletteSpec === item.value}}" class="sheet-check">✓</view>
+        </view>
+      </view>
+
+      <view wx:if="{{sheetType === 'threshold'}}" class="sheet-list">
+        <view wx:for="{{thresholdOptions}}" wx:key="value" class="sheet-list-item {{threshold === item.value ? 'active' : ''}}" data-threshold="{{item.value}}" bindtap="onThresholdTap">
+          <view><view class="sheet-list-name">{{item.name}}</view><view class="sheet-list-desc">{{item.description}}</view></view>
+          <view wx:if="{{threshold === item.value}}" class="sheet-check">✓</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{redeemVisible}}" class="redeem-mask" catchtap="closeRedeem">
+    <view class="redeem-modal" catchtap="stopSheetTap">
+      <view class="redeem-modal-title">兑换会员</view>
+      <view class="redeem-modal-caption">兑换码只能使用一次，请勿向他人泄露</view>
+      <input class="redeem-input" maxlength="64" placeholder="请输入会员兑换码" value="{{redeemCode}}" bindinput="onRedeemInput" />
+      <view class="redeem-modal-actions">
+        <view class="redeem-cancel" bindtap="closeRedeem">取消</view>
+        <view class="redeem-confirm {{paymentBusy ? 'redeem-confirm-disabled' : ''}}" bindtap="submitRedeem">确认兑换</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{historyVisible}}" class="history-mask" catchtap="closeAccountHistory">
+    <view class="history-modal" catchtap="stopSheetTap">
+      <view class="history-modal-head"><view class="history-modal-title">账户记录</view><view class="sheet-close" bindtap="closeAccountHistory">×</view></view>
+      <view wx:if="{{historyLoading}}" class="recent-empty">正在读取服务端记录…</view>
+      <view wx:elif="{{!accountHistory.length}}" class="recent-empty">暂无购买、兑换或使用记录</view>
+      <scroll-view wx:else scroll-y class="history-list">
+        <view wx:for="{{accountHistory}}" wx:key="index" class="history-row">
+          <view class="history-row-main"><view class="history-row-title">{{item.title}}</view><view class="history-row-detail">{{item.detail}} <text wx:if="{{item.creditDelta}}">· {{item.creditDelta > 0 ? '+' : ''}}{{item.creditDelta}}次</text></view></view>
+          <view class="history-row-right"><view wx:if="{{item.amountLabel}}">{{item.amountLabel}}</view><view class="history-row-time">{{item.timeLabel}}</view></view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

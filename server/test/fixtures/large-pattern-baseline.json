@@ -1,0 +1,313 @@
+{
+  "description": "Pre-change full result hashes: codes, source RGB, dimensions, total count. Derived from saved original generator.",
+  "entries": [
+    {
+      "sample": "pink",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 53,
+        "gridHeight": 53,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "6d59fce36a0c0b4e310d203dec6819d2e5e1a2b2df9af601de837d8e3105960d"
+    },
+    {
+      "sample": "pink",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 64,
+        "gridHeight": 64,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "460cbb19b9ed6378b5632cb5813ce849210c4825c9e794ca53a64c3524e6debe"
+    },
+    {
+      "sample": "pink",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 80,
+        "gridHeight": 80,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "eff5bed691b991adf3123df95b72017b9121535b4d87b257a20ecc94fb446ba0"
+    },
+    {
+      "sample": "pink",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 38,
+        "gridHeight": 53,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "c04b1ee33a5d4380ecb7d41587c0874ea274eb0e2cbd38a1665d0b86de6fe633"
+    },
+    {
+      "sample": "pink",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 53,
+        "gridHeight": 38,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "f3971f749acfb0c999256f831e5e45295238f2ce781ee7525abb1ba783daca5d"
+    },
+    {
+      "sample": "pink",
+      "settings": {
+        "sizeMode": "image",
+        "gridWidth": 64,
+        "gridHeight": 64,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "eda25258fb63390032e02a7b0b281715fc75963c741b5d5b1b7b19623c2ea11a"
+    },
+    {
+      "sample": "pink",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 64,
+        "gridHeight": 80,
+        "paletteSpec": "72",
+        "threshold": "medium"
+      },
+      "hash": "14be413894e031b950791f4e8f2d48be98ef5a9a7a19007a66ba4b027844ddfd"
+    },
+    {
+      "sample": "cat",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 53,
+        "gridHeight": 53,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "96e4bf51b8d641690df47c1ffda0ab8d1f3e054b9118f86b21955873c7e02889"
+    },
+    {
+      "sample": "cat",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 64,
+        "gridHeight": 64,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "a77f00ccd51d308f4763df00cb4291b2e4aa9d3cc671279315a3b55e5e8f5071"
+    },
+    {
+      "sample": "cat",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 80,
+        "gridHeight": 80,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "b29d213dfd48e1855b3107606ad7f9bf28ad2b630c0940a90eadd1fb5d7134ec"
+    },
+    {
+      "sample": "cat",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 38,
+        "gridHeight": 53,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "42e102695b4ff1a31ba260dfab7c7ea01b835da442df156819075a81fe7f371e"
+    },
+    {
+      "sample": "cat",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 53,
+        "gridHeight": 38,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "76eed2b00f7790304c29c70abac38fdec7725e0adc5d8c32d95933818e059260"
+    },
+    {
+      "sample": "cat",
+      "settings": {
+        "sizeMode": "image",
+        "gridWidth": 64,
+        "gridHeight": 64,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "f19fb085e6755ce3cbd329f2dd7bea51f75ab4616623434cfa70728db969c531"
+    },
+    {
+      "sample": "cat",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 64,
+        "gridHeight": 80,
+        "paletteSpec": "72",
+        "threshold": "medium"
+      },
+      "hash": "b51502835be5ee5dacc02777f67f32ff936d8656a86a517fe1899bca577ce3d1"
+    },
+    {
+      "sample": "photo",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 53,
+        "gridHeight": 53,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "00bd7538e28c30f22429ab313174f78e2a135bce764179fbc74a1fc5c144e21d"
+    },
+    {
+      "sample": "photo",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 64,
+        "gridHeight": 64,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "9be9d1d9fb273bf3cc365465abc6e506f170cc2a1da3923ecf399b823119996a"
+    },
+    {
+      "sample": "photo",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 80,
+        "gridHeight": 80,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "39daeab89a374196df763fd51363e956e39d8cc49a8237b085ab0667f5414d73"
+    },
+    {
+      "sample": "photo",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 38,
+        "gridHeight": 53,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "b8fb1e38ca67cfe29b29bd680fc5775580c086989a7974fa44cedb29f0907c8b"
+    },
+    {
+      "sample": "photo",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 53,
+        "gridHeight": 38,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "ac2313b513a3b6371254e04557d173855e0596a3b0ea992259d97d50bd6f084d"
+    },
+    {
+      "sample": "photo",
+      "settings": {
+        "sizeMode": "image",
+        "gridWidth": 64,
+        "gridHeight": 64,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "9be9d1d9fb273bf3cc365465abc6e506f170cc2a1da3923ecf399b823119996a"
+    },
+    {
+      "sample": "photo",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 64,
+        "gridHeight": 80,
+        "paletteSpec": "72",
+        "threshold": "medium"
+      },
+      "hash": "b6f62965d5bf89fdd373299697c4787cf0ec798a87850c117ca469e6e2ac62af"
+    },
+    {
+      "sample": "transparent",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 53,
+        "gridHeight": 53,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "09b30d37fade365cd15c06fb1227e37036cb0df6e67c50c3d66e90dc69aaca0d"
+    },
+    {
+      "sample": "transparent",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 64,
+        "gridHeight": 64,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "f8768b3fcdc80c5b4b7ecfe2dd61b3d4043338dd0f7fd00f165d058031f19ac5"
+    },
+    {
+      "sample": "transparent",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 80,
+        "gridHeight": 80,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "2198ce8358251c0a8d72a287ffc0d77024dfcc73747964ad1de55a3efff338ab"
+    },
+    {
+      "sample": "transparent",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 38,
+        "gridHeight": 53,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "cc8a28d5c202ef88e88776f70e4cf3f64e10aa07a6e15ca37d130e7331b28e49"
+    },
+    {
+      "sample": "transparent",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 53,
+        "gridHeight": 38,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "920db66688c0adbee779912bfa22e2fc31e361902d6915e74e5f1d3888af1cf9"
+    },
+    {
+      "sample": "transparent",
+      "settings": {
+        "sizeMode": "image",
+        "gridWidth": 64,
+        "gridHeight": 64,
+        "paletteSpec": "221",
+        "threshold": "none"
+      },
+      "hash": "d50642bb07f01eb409c04c229545cb9a1c3751ac7449e515ef376a5247b3937e"
+    },
+    {
+      "sample": "transparent",
+      "settings": {
+        "sizeMode": "board",
+        "gridWidth": 64,
+        "gridHeight": 80,
+        "paletteSpec": "72",
+        "threshold": "medium"
+      },
+      "hash": "95004fc5318cb07d429f480705fd2df9d8214a08a4562f50c9f8037f24fce9fa"
+    }
+  ]
+}

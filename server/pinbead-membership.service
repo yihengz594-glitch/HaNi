@@ -1,0 +1,21 @@
+[Unit]
+Description=Pinbead membership and payment API
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pinbead
+Group=pinbead
+WorkingDirectory=/opt/pinbead/app
+EnvironmentFile=/opt/pinbead/app/.env.local
+ExecStart=/usr/bin/node /opt/pinbead/app/src/server.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/pinbead/app
+
+[Install]
+WantedBy=multi-user.target

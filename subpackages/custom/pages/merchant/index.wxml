@@ -1,0 +1,9 @@
+<view class="custom-page"><view class="custom-head"><view class="eyebrow">仅授权商家可见</view><view class="title">人工定制工作台</view><view class="muted">原图、聊天及成品访问均由服务端逐单校验。</view></view>
+  <view wx:if="{{loading}}" class="custom-card">正在加载工单…</view>
+  <view wx:elif="{{!authorized}}" class="custom-card">无商家权限或服务端尚未配置</view>
+  <view wx:elif="{{!orders.length}}" class="custom-card">暂无待处理工单</view>
+  <view wx:for="{{orders}}" wx:key="id" class="custom-card order-item" data-id="{{item.id}}" bindtap="openOrder">
+    <view class="row"><view class="title-small">{{item.persons}}人 · {{item.style}}</view><view class="status">{{item.statusLabel}}</view></view>
+    <view class="muted">客户 {{item.customerId}} · {{item.createdAt}}</view><view wx:if="{{item.unread}}" class="unread">有新消息或进度更新</view>
+  </view>
+</view>

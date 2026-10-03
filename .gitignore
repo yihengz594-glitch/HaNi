@@ -1,0 +1,6 @@
+server/.env.local
+server/.env.*.local
+server/secrets/
+server/logs/
+server/node_modules/
+.codex-backup-*/
