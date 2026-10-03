@@ -43,7 +43,7 @@ test('touch cell coordinates account for viewport position, zoom and pan; fast d
   assert.deepEqual(lineCells({ row: 0, col: 0 }, { row: 0, col: 4 }).map((cell) => cell.col), [0, 1, 2, 3, 4])
 })
 
-test('page edits a copy; cancel restores counts; save persists one recent grid and export uses it without generation', () => {
+for (const generationMode of ['legacy', 'target']) test(`${generationMode}: editing, history and export share one matrix without generation`, () => {
   const previousPage = globalThis.Page
   const previousWx = globalThis.wx
   let definition
@@ -51,9 +51,10 @@ test('page edits a copy; cancel restores counts; save persists one recent grid a
   try {
     globalThis.Page = (value) => { definition = value }
     globalThis.wx = { setStorageSync: (_, value) => { cached = value }, showToast: () => {}, showLoading: () => {} }
+    delete require.cache[require.resolve('../../pages/index/index.js')]
     require('../../pages/index/index.js')
     const page = Object.assign({}, definition, {
-      data: { ...definition.data, gridWidth: 2, gridHeight: 2, patternReady: true, imagePath: '/tmp/source.jpg' },
+      data: { ...definition.data, generationMode, generationModeIndex: generationMode === 'target' ? 1 : 0, targetVersion: generationMode === 'target' ? 'target-v1' : '', gridWidth: 2, gridHeight: 2, patternReady: true, imagePath: '/tmp/source.jpg' },
       setData(change, callback) { Object.assign(this.data, change); if (callback) callback() },
       drawGrid() {},
       getActivePalette: () => PALETTE,
@@ -91,6 +92,8 @@ test('page edits a copy; cancel restores counts; save persists one recent grid a
     assert.equal(page.data.recentWorks.length, 1)
     assert.equal(page.currentRecentWorkId, recentId)
     assert.deepEqual(cached[0].patternCodes, [['', 'H2'], ['H7', 'H2']])
+    assert.equal(cached[0].generationMode, generationMode)
+    assert.equal(cached[0].targetVersion, generationMode === 'target' ? 'target-v1' : '')
     assert.equal(page.data.totalBeads, 3)
     assert.deepEqual(page.data.colorStats.map(({ code, count }) => [code, count]), [['H2', 2], ['H7', 1]])
 
@@ -113,6 +116,7 @@ test('page edits a copy; cancel restores counts; save persists one recent grid a
     assert.equal(exported.path, '/tmp/edited.png')
     assert.ok(exported.size[0] > 0 && exported.size[1] > 0)
     page.openRecentWork({ currentTarget: { dataset: { id: recentId } } })
+    assert.equal(page.data.generationMode, generationMode)
     assert.deepEqual(page.getRecentPatternCodes(page.patternGrid), exported.codes)
     page.startPatternEdit()
     page.restoreOriginalPattern()

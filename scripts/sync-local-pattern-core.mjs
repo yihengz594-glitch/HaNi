@@ -18,6 +18,8 @@ const localSource = `// Generated from server/src/pattern-core.js by scripts/syn
 // Do not edit pixel algorithms here; run the sync script after changing the server core.
 const PALETTE = require('./palette')
 const lowResolutionEngine = require('../../shared/small-pattern-engine.js')
+const reconstructionEngine = require('../../shared/bead-reconstruction.js')
+const { TARGET_VERSION } = require('../../shared/generation-settings.js')
 
 ${sharedCore}
 
@@ -37,6 +39,7 @@ function generateLocalPattern(image, settings, fallbackCanvas) {
   })
   let size
   let grid
+  let diagnostics
   const isFixedBoard = settings.sizeMode !== 'image'
   const requestedBoardSize = isFixedBoard
     ? {
@@ -49,7 +52,16 @@ function generateLocalPattern(image, settings, fallbackCanvas) {
   const createCanvas = (options) => wx.createOffscreenCanvas
     ? wx.createOffscreenCanvas(options)
     : fallbackCanvas
-  if (boardUsesLowMode) {
+  if (settings.generationMode === 'target' || settings.algorithm === 'reconstruction') {
+    size = requestedBoardSize || (() => {
+      const normalized = runtime.createNormalizedPixels(image)
+      return runtime.resolveGridSize(normalized.pixels, normalized.bounds)
+    })()
+    const result = reconstructionEngine.generate(runtime, image, size, createCanvas,
+      { debug: settings.debug === true, sampling: settings.sampling })
+    grid = result.grid
+    diagnostics = result.diagnostics
+  } else if (boardUsesLowMode) {
     size = requestedBoardSize
     grid = lowResolutionEngine.generate(runtime, image, size, createCanvas, 1200)
   } else {
@@ -71,7 +83,10 @@ function generateLocalPattern(image, settings, fallbackCanvas) {
     if (!sourceRgbByCode[color.code] && color.sourceRgb) sourceRgbByCode[color.code] = color.sourceRgb
     return color.code
   }))
-  return { gridCodes, sourceRgbByCode, columns: size.columns, rows: size.rows, totalBeads }
+  const result = { gridCodes, sourceRgbByCode, columns: size.columns, rows: size.rows, totalBeads }
+  if (settings.generationMode === 'target') Object.assign(result, { generationMode: 'target', targetVersion: TARGET_VERSION })
+  if (settings.debug === true && diagnostics) result.diagnostics = diagnostics
+  return result
 }
 
 module.exports = { generateLocalPattern }

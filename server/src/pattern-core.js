@@ -4,6 +4,8 @@ import { createRequire } from 'node:module'
 const require = createRequire(new URL('../../pages/index/index.js', import.meta.url))
 const PALETTE = require('./palette.js')
 const lowResolutionEngine = require('../../shared/small-pattern-engine.js')
+const reconstructionEngine = require('../../shared/bead-reconstruction.js')
+const { TARGET_VERSION } = require('../../shared/generation-settings.js')
 const wx = { createOffscreenCanvas: ({ width, height }) => createCanvas(width, height) }
 
 const CANVAS_SIZE = 1200
@@ -1738,6 +1740,7 @@ export async function generatePattern(imageBuffer, settings) {
   })
   let size
   let grid
+  let diagnostics
   const isFixedBoard = settings.sizeMode !== 'image'
   const requestedBoardSize = isFixedBoard
     ? {
@@ -1747,7 +1750,17 @@ export async function generatePattern(imageBuffer, settings) {
     : null
   const boardUsesLowMode = requestedBoardSize
     && Math.max(requestedBoardSize.columns, requestedBoardSize.rows) <= 52
-  if (boardUsesLowMode) {
+  if (settings.generationMode === 'target' || settings.algorithm === 'reconstruction') {
+    const analyzedSize = requestedBoardSize || (() => {
+      const normalized = runtime.createNormalizedPixels(image)
+      return runtime.resolveGridSize(normalized.pixels, normalized.bounds)
+    })()
+    size = analyzedSize
+    const result = reconstructionEngine.generate(runtime, image, size,
+      (options) => wx.createOffscreenCanvas(options), { debug: settings.debug === true, sampling: settings.sampling })
+    grid = result.grid
+    diagnostics = result.diagnostics
+  } else if (boardUsesLowMode) {
     size = requestedBoardSize
     grid = lowResolutionEngine.generate(runtime, image, size,
       (options) => wx.createOffscreenCanvas(options), CANVAS_SIZE)
@@ -1771,5 +1784,8 @@ export async function generatePattern(imageBuffer, settings) {
     if (!sourceRgbByCode[color.code] && color.sourceRgb) sourceRgbByCode[color.code] = color.sourceRgb
     return color.code
   }))
-  return { gridCodes, sourceRgbByCode, columns: size.columns, rows: size.rows, totalBeads }
+  const result = { gridCodes, sourceRgbByCode, columns: size.columns, rows: size.rows, totalBeads }
+  if (settings.generationMode === 'target') Object.assign(result, { generationMode: 'target', targetVersion: TARGET_VERSION })
+  if (settings.debug === true && diagnostics) result.diagnostics = diagnostics
+  return result
 }

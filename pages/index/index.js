@@ -1,8 +1,9 @@
 const PALETTE = require('./palette')
-const { PRODUCTS, MEMBERSHIP_POLICY, PAYMENT_CONFIG } = require('./membership-config')
+const { PRODUCTS, MEMBERSHIP_POLICY, GENERATION_POLICY, PAYMENT_CONFIG } = require('./membership-config')
 const { canUseLocalGeneration } = require('./local-generation-policy')
 const { generateLocalPattern } = require('./local-pattern-core')
 const { createPatternEditor, clientToCell, lineCells } = require('./pattern-editor')
+const { TARGET_VERSION } = require('../../shared/generation-settings')
 // 会员中心页面与支付入口保持在本地 MVP 中；真实权益仍以服务端返回为准。
 
 // 预览画布使用更大的 backing store，避免手机屏幕缩放后出现糊边和小字发虚。
@@ -62,11 +63,14 @@ Page({
   data: {
     activeTab: 'home',
     localGenerationMode: false,
+    generationMode: 'legacy',
+    generationModeNames: ['旧版模式', '目标模式（试用）'],
+    generationModeIndex: 0,
   pageTitle: '拼豆高级版',
     customServiceLabel: '人工定制尚未开放接单',
     customServiceMerchant: false,
-    homeHeroImage: '../../assets/website-covers/cover-2.jpg',
-    galleryGuideImage: '../../assets/website-covers/cover-3.jpg',
+    homeHeroImage: '../../assets/pinbead-cat/cat-bead-work.jpg',
+    galleryGuideImage: '../../assets/pinbead-cat/gallery/guide-click-for-surprise.jpg',
     navItems: [
       { key: 'home', name: 'AI首页', icon: '✦', theme: 'purple' },
       { key: 'make', name: '直接制图', icon: '▦', theme: 'blue' },
@@ -75,28 +79,20 @@ Page({
     // 首页只展示插画，不再把插画作为风格选择或生成参数。
     homeIllustrations: [
       {
-        image: '../../assets/website-covers/cover-5.jpg',
-        group: 'all', loaded: false, failed: false, renderImage: true
+        image: '../../assets/pinbead-cat/gallery/inspiration-bead-maker.jpg',
+        group: '1', loaded: false, failed: false, renderImage: true
       },
       {
-        image: '../../assets/website-covers/cover-6.jpg',
-        group: 'all', loaded: false, failed: false, renderImage: true
+        image: '../../assets/pinbead-cat/gallery/inspiration-color-board.jpg',
+        group: '2', loaded: false, failed: false, renderImage: true
       },
       {
-        image: '../../assets/website-covers/cover-7.jpg',
-        group: 'all', loaded: false, failed: false, renderImage: true
+        image: '../../assets/pinbead-cat/gallery/inspiration-process.jpg',
+        group: '3', loaded: false, failed: false, renderImage: true
       },
       {
-        image: '../../assets/website-covers/cover-8.jpg',
-        group: 'all', loaded: false, failed: false, renderImage: true
-      },
-      {
-        image: '../../assets/website-covers/cover-9.jpg',
-        group: 'all', loaded: false, failed: false, renderImage: true
-      },
-      {
-        image: '../../assets/website-covers/cover-10.jpg',
-        group: 'all', loaded: false, failed: false, renderImage: true
+        image: '../../assets/pinbead-cat/gallery/inspiration-gallery.jpg',
+        group: '4', loaded: false, failed: false, renderImage: true
       }
     ],
     homeHeroLoaded: false,
@@ -188,7 +184,7 @@ Page({
   },
 
   onLoad() {
-    this.setData({ localGenerationMode: canUseLocalGeneration(wx, this.getPaymentBaseUrl()) })
+    this.setData({ localGenerationMode: canUseLocalGeneration(wx, this.getPaymentBaseUrl(), GENERATION_POLICY) })
     this.loadLocalMemberData()
   },
 
@@ -772,6 +768,8 @@ Page({
       gridHeight: this.data.gridHeight,
       paletteStandard: this.data.paletteStandard,
       paletteSpec: this.data.paletteSpec,
+      generationMode: this.data.generationMode,
+      targetVersion: this.data.targetVersion || '',
       totalBeads: this.countFilledBeads(grid),
       createdAt: now,
       timeLabel: this.formatRecentTime(now)
@@ -869,6 +867,9 @@ Page({
       customHeight: Number(item.gridHeight) || grid.length,
       paletteStandard: item.paletteStandard || this.data.paletteStandard,
       paletteSpec: item.paletteSpec || this.data.paletteSpec,
+      generationMode: item.generationMode === 'target' ? 'target' : 'legacy',
+      generationModeIndex: item.generationMode === 'target' ? 1 : 0,
+      targetVersion: item.targetVersion || '',
       patternReady: true,
       totalBeads: this.countFilledBeads(grid),
       colorStats: this.buildColorStats(grid),
@@ -896,6 +897,9 @@ Page({
       imagePath: this.getRecentSourceImagePath(item),
       paletteStandard: item.paletteStandard || this.data.paletteStandard,
       paletteSpec: item.paletteSpec || this.data.paletteSpec,
+      generationMode: item.generationMode === 'target' ? 'target' : 'legacy',
+      generationModeIndex: item.generationMode === 'target' ? 1 : 0,
+      targetVersion: item.targetVersion || '',
       gridWidth: Number(item.gridWidth) || grid[0].length,
       gridHeight: Number(item.gridHeight) || grid.length,
       gridSize: Number(item.gridWidth) || grid[0].length,
@@ -1148,9 +1152,14 @@ Page({
     if (!this.data.imagePath || this.data.generating) {
       return
     }
+    if (canUseLocalGeneration(wx, this.getPaymentBaseUrl(), GENERATION_POLICY)) {
+      if (this.activeGenerationKey) return this.showGenerationPendingHint()
+      this.generateLocalTestPattern()
+      return
+    }
     if (!this.getPaymentBaseUrl()) {
       if (this.activeGenerationKey) return this.showGenerationPendingHint()
-      if (canUseLocalGeneration(wx, this.getPaymentBaseUrl())) {
+      if (canUseLocalGeneration(wx, this.getPaymentBaseUrl(), GENERATION_POLICY)) {
         if (this.localGenerationNoticeShown) {
           this.generateLocalTestPattern()
           return
@@ -1226,7 +1235,7 @@ Page({
   },
 
   generateLocalTestPattern() {
-    // 不调用额度、下单或服务端任务接口；开发版结果只留在本机。
+    // 体验版不调用额度、下单或服务端任务接口；结果只留在本机。
     this.setData({ generating: true }, () => {
       this.initCanvas((canvasError) => {
         if (canvasError || !this.canvas || typeof this.canvas.createImage !== 'function') {
@@ -1272,9 +1281,18 @@ Page({
         gridWidth: this.data.gridWidth,
         gridHeight: this.data.gridHeight,
         paletteSpec: String(this.data.paletteSpec),
-        threshold: this.data.threshold
+        threshold: this.data.threshold,
+        ...(this.data.generationMode === 'target' ? { generationMode: 'target' } : {})
       }
     }
+  },
+
+  onGenerationModeChange(e) {
+    if (this.activeGenerationKey || this.data.generating) return this.showGenerationPendingHint()
+    if (this.data.editing) return wx.showToast({ title: '请先结束图纸编辑', icon: 'none' })
+    const index = Number(e.detail.value) === 1 ? 1 : 0
+    if (index === this.data.generationModeIndex) return
+    this.setData({ generationModeIndex: index, generationMode: index ? 'target' : 'legacy', patternReady: false })
   },
 
   uploadPatternTask(token, requestKey) {
@@ -1374,6 +1392,12 @@ Page({
 
   acceptServerPattern(result) {
     if (this.data.editing) return
+    const expectedTarget = this.activeGenerationSnapshot && this.activeGenerationSnapshot.settings.generationMode === 'target'
+    if (expectedTarget && (!result || result.generationMode !== 'target' || result.targetVersion !== TARGET_VERSION)) {
+      this.setData({ generating: false })
+      wx.showToast({ title: '服务端目标模式版本不匹配，请更新服务端', icon: 'none' })
+      return
+    }
     const codes = result && result.gridCodes
     if (!Array.isArray(codes) || !codes.length || codes.length > 160 || !Array.isArray(codes[0]) || codes[0].length > 160) {
       this.setData({ generating: false })
@@ -1401,9 +1425,13 @@ Page({
     const columns = grid[0].length
     const rows = grid.length
     this.patternGrid = grid
+    const generationMode = result.generationMode === 'target' ? 'target' : 'legacy'
     this.setData({
       generating: false,
       patternReady: true,
+      generationMode,
+      generationModeIndex: generationMode === 'target' ? 1 : 0,
+      targetVersion: result.targetVersion || '',
       viewMode: 'sheet',
       gridSize: Math.max(columns, rows),
       gridWidth: columns,

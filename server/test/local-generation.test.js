@@ -10,17 +10,21 @@ import { generatePattern } from '../src/pattern-core.js'
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const require = createRequire(import.meta.url)
 const { canUseLocalGeneration } = require('../../pages/index/local-generation-policy.js')
+const { GENERATION_POLICY } = require('../../pages/index/membership-config.js')
 const { generateLocalPattern } = require('../../pages/index/local-pattern-core.js')
 
-test('local fallback only runs in the development build with no backend URL', () => {
+test('temporary free mode enables local generation for every build environment', () => {
   const version = (envVersion) => ({ getAccountInfoSync: () => ({ miniProgram: { envVersion } }) })
-  assert.equal(canUseLocalGeneration(version('develop'), ''), true)
-  for (const envVersion of ['trial', 'release', '', undefined]) {
-    assert.equal(canUseLocalGeneration(version(envVersion), ''), false)
+  for (const envVersion of ['develop', 'trial', 'release', '', undefined]) {
+    assert.equal(canUseLocalGeneration(version(envVersion), 'https://example.test', GENERATION_POLICY), true)
   }
-  assert.equal(canUseLocalGeneration(version('develop'), 'https://example.test'), false)
-  assert.equal(canUseLocalGeneration({ getAccountInfoSync: () => { throw new Error('unavailable') } }, ''), false)
-  assert.equal(canUseLocalGeneration({}, ''), false)
+  assert.equal(canUseLocalGeneration({}, 'https://example.test', GENERATION_POLICY), true)
+  assert.equal(canUseLocalGeneration(null, 'https://example.test', GENERATION_POLICY), false)
+  assert.equal(canUseLocalGeneration(version('develop'), '', { allowLocalForAll: false }), true)
+  assert.equal(canUseLocalGeneration(version('release'), '', { allowLocalForAll: false }), false)
+  assert.equal(canUseLocalGeneration(version('develop'), 'https://example.test', { allowLocalForAll: false }), false)
+  assert.equal(canUseLocalGeneration({ getAccountInfoSync: () => { throw new Error('unavailable') } }, '', { allowLocalForAll: false }), false)
+  assert.equal(canUseLocalGeneration({}, '', { allowLocalForAll: false }), false)
 })
 
 test('mini-program development generator retains the exact server pixel algorithm', async () => {
@@ -45,7 +49,7 @@ test('mini-program development generator retains the exact server pixel algorith
   }
 })
 
-test('home page routes only development/no-backend attempts to local generation', () => {
+test('home page routes every build to local generation while free mode is enabled', () => {
   const previousPage = globalThis.Page
   const previousWx = globalThis.wx
   let definition
@@ -68,7 +72,7 @@ test('home page routes only development/no-backend attempts to local generation'
     globalThis.wx.getAccountInfoSync = () => ({ miniProgram: { envVersion: 'release' } })
     page.localGenerationNoticeShown = false
     page.generatePattern()
-    assert.equal(localCalls, 1)
+    assert.equal(localCalls, 2)
   } finally {
     globalThis.Page = previousPage
     globalThis.wx = previousWx

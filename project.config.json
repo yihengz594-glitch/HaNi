@@ -24,6 +24,7 @@
     "postcss": true,
     "minified": true,
     "compileHotReLoad": true,
+    "bigPackageSizeSupport": true,
     "condition": false,
     "compileWorklet": false,
     "uglifyFileName": false,

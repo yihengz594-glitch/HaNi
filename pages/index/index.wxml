@@ -60,7 +60,7 @@
       </view>
     </view>
 
-    <view class="mini-note"><view class="note-dot"></view>点击插画查看现有作品图库，不会带入制图参数或扣次</view>
+    <view class="mini-note"><view class="note-dot"></view>点击插画只查看对应成品示例，不会带入制图参数或扣次</view>
   </view>
 
   <view wx:if="{{activeTab === 'make'}}" class="tab-panel make-panel">
@@ -81,7 +81,7 @@
       <view class="upload-gradient-icon">＋</view>
       <view class="upload-title-pro">点击上传图片</view>
       <view class="upload-hint-pro">支持拍照或从手机相册选择</view>
-      <view class="upload-footnote"><view class="note-dot"></view>{{localGenerationMode ? '开发版仅在本机生成，不扣次、不创建服务端任务' : '确认生成后上传服务端处理；失败任务不收费'}}</view>
+      <view class="upload-footnote"><view class="note-dot"></view>{{localGenerationMode ? '当前体验版本机生成，不扣次、不创建服务端任务' : '确认生成后上传服务端处理；失败任务不收费'}}</view>
     </view>
 
     <view wx:else class="selected-image-card">
@@ -150,6 +150,12 @@
           <view class="setting-row-value">{{paletteSpec}}色 <text class="setting-row-arrow">›</text></view>
         </view>
       </view>
+      <picker range="{{generationModeNames}}" value="{{generationModeIndex}}" bindchange="onGenerationModeChange" disabled="{{generating || editing}}">
+        <view class="setting-row setting-row-action">
+          <view class="setting-row-label">生成模式</view>
+          <view class="setting-row-value">{{generationModeNames[generationModeIndex]}} <text class="setting-row-arrow">›</text></view>
+        </view>
+      </picker>
       <view class="setting-row setting-row-action" bindtap="openThresholdSheet">
         <view>
           <view class="setting-row-label">颜色合并阈值</view>
@@ -167,7 +173,7 @@
       <view wx:if="{{patternReady}}" class="result-heading">
         <view>
           <view class="section-title">图纸预览</view>
-          <view class="result-meta">{{gridWidth}} × {{gridHeight}} 格 · {{paletteStandard}} 最近色号 · 共 {{totalBeads}} 颗豆{{editing ? '（编辑副本）' : ''}}</view>
+          <view class="result-meta">{{gridWidth}} × {{gridHeight}} 格 · {{paletteStandard}} {{generationMode === 'target' ? '目标模式' : '最近色号'}} · 共 {{totalBeads}} 颗豆{{editing ? '（编辑副本）' : ''}}</view>
         </view>
         <view wx:if="{{!editing}}" class="result-edit-shortcut" bindtap="startPatternEdit">编辑图纸</view>
         <view wx:else class="tip-badge">每格显示色号</view>
@@ -245,16 +251,17 @@
   <view wx:if="{{activeTab === 'mine'}}" class="tab-panel mine-panel">
     <view class="member-card">
       <view class="member-topline">
-        <view class="member-status">{{memberProfile.statusLabel}}</view>
-        <view class="member-note">{{memberProfile.note}}</view>
+        <view class="member-status">{{localGenerationMode ? '体验版开放中' : memberProfile.statusLabel}}</view>
+        <view class="member-note">{{localGenerationMode ? '当前体验版生成不限次数' : memberProfile.note}}</view>
       </view>
       <view class="member-title">{{memberProfile.title}}</view>
-      <view class="member-description">{{memberProfile.description}}</view>
+      <view class="member-description">{{localGenerationMode ? '所有体验者均可直接生成拼豆图纸，暂不扣次数' : memberProfile.description}}</view>
       <view wx:if="{{memberProfile.daysRemaining > 0}}" class="member-expiry">{{memberProfile.planName}} · 剩余 {{memberProfile.daysRemaining}} 天<text wx:if="{{memberProfile.expiresAt}}"> · 到期 {{memberProfile.expiresAt}}</text></view>
       <view class="member-features">
-        <view wx:if="{{memberProfile.permanentEntitlement}}">永久权益 · 生成不限次数</view>
+        <view wx:if="{{localGenerationMode}}">生成不限次数</view>
+        <view wx:elif="{{memberProfile.permanentEntitlement}}">永久权益 · 生成不限次数</view>
         <view wx:else>剩余次数：{{memberProfile.creditsRemaining}}次</view>
-        <view>生成成功后结算</view>
+        <view>{{localGenerationMode ? '结果保存在本机，服务端次数功能暂未启用' : '生成成功后结算'}}</view>
       </view>
       <view class="member-art">
         <view class="member-orb orb-purple"></view>
@@ -263,15 +270,15 @@
       </view>
     </view>
 
-    <view class="section-head plan-head">
+    <view wx:if="{{!localGenerationMode}}" class="section-head plan-head">
       <view>
         <view class="section-title">选择套餐</view>
         <view class="section-caption">次数卡不限期限 · 永久卡不限次数</view>
       </view>
       <view class="payment-mode-label">{{paymentModeLabel}}</view>
     </view>
-    <view class="catalog-status">{{productCatalogStatus}}</view>
-    <view class="plan-list">
+    <view wx:if="{{!localGenerationMode}}" class="catalog-status">{{productCatalogStatus}}</view>
+    <view wx:if="{{!localGenerationMode}}" class="plan-list">
       <view wx:for="{{membershipOptions}}" wx:key="id" class="plan-card {{item.featured ? 'plan-card-featured' : ''}}">
         <view class="plan-copy">
           <view class="plan-name">{{item.name}} <text wx:if="{{item.badge}}" class="plan-badge">{{item.badge}}</text></view>
@@ -310,12 +317,12 @@
       <view wx:else class="recent-empty"><view class="recent-empty-icon">✦</view>生成成功后会自动保存在这里</view>
     </view>
 
-    <view class="account-history-card" bindtap="openAccountHistory">
+    <view wx:if="{{!localGenerationMode}}" class="account-history-card" bindtap="openAccountHistory">
       <view><view class="redeem-title">购买、兑换与使用记录</view><view class="redeem-caption">查看服务端账户流水</view></view>
       <view class="redeem-button">查看</view>
     </view>
 
-    <view class="redeem-card" bindtap="openRedeem">
+    <view wx:if="{{!localGenerationMode}}" class="redeem-card" bindtap="openRedeem">
       <view>
         <view class="redeem-title">已有兑换码</view>
         <view class="redeem-caption">输入次数卡或永久卡兑换码</view>

@@ -1,4 +1,5 @@
 import crypto from 'node:crypto'
+import generationSettings from '../../shared/generation-settings.js'
 import { fileURLToPath } from 'node:url'
 import express from 'express'
 import { config, assertLiveConfig } from './config.js'
@@ -292,16 +293,7 @@ app.post('/api/pattern/tasks', requireUser, express.raw({ type: 'multipart/form-
     validateImageSignature(imageBuffer)
     if (fields.taskType !== 'DIRECT_PATTERN') return fail(res, 501, '此类生成服务尚未接入')
     const submitted = JSON.parse(fields.settings || '{}')
-    const paletteValues = new Set(['72', '96', '144', '221', '238', '291'])
-    const thresholds = new Set(['none', 'light', 'medium', 'strong', 'veryStrong'])
-    const bound = (value, fallback) => Math.max(8, Math.min(160, Math.round(Number(value) || fallback)))
-    const settings = {
-      sizeMode: submitted.sizeMode === 'image' ? 'image' : 'board',
-      gridWidth: bound(submitted.gridWidth, 64),
-      gridHeight: bound(submitted.gridHeight, 64),
-      paletteSpec: paletteValues.has(String(submitted.paletteSpec)) ? String(submitted.paletteSpec) : '221',
-      threshold: thresholds.has(String(submitted.threshold)) ? String(submitted.threshold) : 'none'
-    }
+    const settings = generationSettings.normalizeGenerationSettings(submitted)
     const requestHash = crypto.createHash('sha256')
       .update(imageBuffer)
       .update('\0')

@@ -11,6 +11,15 @@ const MEMBERSHIP_POLICY = {
   ]
 }
 
+// 临时体验开关：先让所有体验者直接在小程序本机生成，避免服务端未部署或
+// 额度服务异常阻断制图。后续接入稳定服务端后，将 allowLocalForAll 改为 false，
+// 即可恢复原有登录、预占和扣次流程。
+const GENERATION_POLICY = {
+  mode: 'local-free',
+  allowLocalForAll: true,
+  label: '当前体验版生成不限次数'
+}
+
 // The shared catalog supplies one UI display fallback. The live server product
 // endpoint overrides it; order amounts and benefits are always read by the server.
 const PAYMENT_CONFIG = {
@@ -30,4 +39,4 @@ const PAYMENT_CONFIG = {
   }
 }
 
-module.exports = { PRODUCTS, MEMBERSHIP_POLICY, PAYMENT_CONFIG }
+module.exports = { PRODUCTS, MEMBERSHIP_POLICY, GENERATION_POLICY, PAYMENT_CONFIG }

@@ -10,7 +10,7 @@ const serverFiles = [
   'src/admin.js', 'src/admin-store.js', 'src/multipart-image.js', 'public/admin/admin.js',
   'src/pattern-core.js', 'src/pattern-runner.js', 'src/pattern-worker.js',
   'src/custom-rules.js', 'src/custom-files.js', 'src/custom-store.js', 'src/custom-router.js',
-  'scripts/cleanup-custom-files.mjs', 'scripts/compare-small-patterns.mjs', 'scripts/compare-facial-details.mjs', 'scripts/compare-compact-layout.mjs'
+  'scripts/cleanup-custom-files.mjs', 'scripts/compare-small-patterns.mjs', 'scripts/compare-facial-details.mjs', 'scripts/compare-compact-layout.mjs', 'scripts/compare-reconstruction.mjs', 'scripts/compare-resampling.mjs', 'scripts/inspect-target-stages.mjs'
 ]
 const projectFiles = [
   'pages/index/index.js', 'pages/index/membership-config.js',
@@ -18,7 +18,7 @@ const projectFiles = [
   'pages/index/palette.js', 'subpackages/gallery/pages/index/index.js', 'shared/product-catalog.js',
   'subpackages/custom/api.js', 'subpackages/custom/pages/submit/index.js',
   'subpackages/custom/pages/list/index.js', 'subpackages/custom/pages/detail/index.js',
-  'subpackages/custom/pages/merchant/index.js', 'shared/small-pattern-engine.js', 'shared/low-resolution-engine.js'
+  'subpackages/custom/pages/merchant/index.js', 'shared/small-pattern-engine.js', 'shared/low-resolution-engine.js', 'shared/bead-reconstruction.js', 'shared/target-analysis.js', 'shared/generation-settings.js'
 ]
 const pageBindings = [
   ['pages/index/index.wxml', 'pages/index/index.js'],
