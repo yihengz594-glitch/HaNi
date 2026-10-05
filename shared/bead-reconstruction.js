@@ -69,9 +69,9 @@ function boundedWorkingSource(analyzed,width,height,analysisLimit) {
 }
 function resolutionParameters(width,height,analysis) {
   const resolutionFactor=Math.sqrt(width*height)
-  const base=resolutionFactor<=32?14:resolutionFactor<=52?22:resolutionFactor<=80?30:resolutionFactor<=100?38:46
+  const base=resolutionFactor<=32?14:resolutionFactor<=52?22:resolutionFactor<=80?30:resolutionFactor<=100?38:60
   const flat=['pixel','flat-design','monochrome'].includes(analysis.kind)
-  return {resolutionFactor,colorBudget:Math.round(base*(.65+.45*analysis.complexity)),
+  return {resolutionFactor,colorBudget:Math.round(base*(.8+.5*analysis.complexity)),
     smoothRadius:flat?0:resolutionFactor<=52?2:1,rangeSigma:analysis.kind==='low-saturation'?22:18,
     smallRegionLimit:3,mergeDistance:resolutionFactor<=52?8:6,
     backgroundDetailFactor:.55,regionConsistencyPenalty:flat?.15:.7,paletteComplexityPenalty:2.5,
@@ -255,6 +255,8 @@ function simplifyRegionalColors(clusters,cells,params,analysis) {
     const [r,g,b]=cluster.rgb
     const skinRegion=cluster.members.some(i=>(cells[i].role||1)>=4)&&cluster.lab[0]>68&&
       cluster.lab[1]>1.5&&cluster.lab[2]>-.5&&r-g>6&&g-b>-8&&g-b<45
+    // Material kinds retain a fixed cross-kind cost while allowing a nearby
+    // warm center to compete for weakly chromatic regional colors.
     // Achromatic material must not borrow the center of a neighboring brown
     // mass. Otherwise dark gray clothing and brown hair become the same red.
     const materialFamily=family(cluster.rgb)
@@ -290,11 +292,11 @@ function simplifyRegionalColors(clusters,cells,params,analysis) {
   const closest=point=>{
     let index=0,cost=Infinity
     centers.forEach((center,i)=>{
-      if(point.kind!==center.kind)return
+      const kindPenalty=point.kind!==center.kind?8:0
       const d=colorDistance(point.rgb,point.lab,center.lab,center.rgb,analysis.kind==='monochrome')
       const protection=point.cluster.protected?Math.abs(point.lab[0]-center.lab[0])*.5:0
       const toneProtection=(point.lab[0]>94&&center.lab[0]<92 || point.lab[0]<22&&center.lab[0]>26)?25:0
-      if(d+protection+toneProtection<cost){cost=d+protection+toneProtection;index=i}
+      if(d+protection+toneProtection+kindPenalty<cost){cost=d+protection+toneProtection+kindPenalty;index=i}
     })
     return index
   }
@@ -343,8 +345,8 @@ function mapToMardPalette(clusters,cells,palette,params,analysis) {
     // Muted brown hair / warm fur is not grayscale. Lock only genuinely neutral
     // source regions, not every low-saturation color in a low-saturation image.
     const neutralLock=analysis.kind==='low-saturation'&&Math.hypot(cluster.lab[1],cluster.lab[2])<1.2&&chroma(cluster.rgb)<9
-    const neutralSource=analysis.kind==='low-saturation'&&Math.hypot(cluster.lab[1],cluster.lab[2])<3.5&&chroma(cluster.rgb)<24
-    const candidatePalette=neutralSource&&palette.filter(p=>neutralCodes.has(p.code)).length>=3
+    const neutralSource=analysis.kind==='low-saturation'&&Math.hypot(cluster.lab[1],cluster.lab[2])<3.5&&chroma(cluster.rgb)<8
+    const candidatePalette=(neutralSource||neutralLock)&&palette.filter(p=>neutralCodes.has(p.code)).length>=3
       ?palette.filter(p=>neutralCodes.has(p.code)):palette
     const labs=candidatePalette.map(p=>oklab(p.rgb))
     const hasNeutral=neutralLock&&candidatePalette.some(p=>chroma(p.rgb)<=10)
@@ -439,7 +441,7 @@ function optimizePalette(grid,cells,params,analysis) {
     let best=null,bestIncrease=Infinity
     for(const candidate of groups.values()){
       if(candidate===group||candidate.members.length<group.members.length)continue
-      if(labDistance(oklab(group.color.rgb),oklab(candidate.color.rgb))>params.mergeDistance)continue
+      if(labDistance(oklab(group.color.rgb),oklab(candidate.color.rgb))>=params.mergeDistance*.7)continue
       if(analysis.kind==='low-saturation'&&chroma(group.color.rgb)<=10&&chroma(candidate.color.rgb)>10)continue
       let increase=0
       const oldLab=oklab(group.color.rgb),newLab=oklab(candidate.color.rgb)
