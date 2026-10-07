@@ -73,6 +73,7 @@ function generateLocalPattern(image, settings, fallbackCanvas) {
       const fitted = !isFixedBoard && runtime.data.layoutMode !== 'legacy' ? runtime.createNormalizedPixels(image, size) : normalized
       const rawGrid = runtime.convertToGrid(fitted.pixels, size.columns, size.rows)
       grid = runtime.applyCartoonOutline(rawGrid, fitted)
+      if (runtime.data.layoutMode !== 'legacy') grid = runtime.removeIsolatedColors(grid, runtime.quantizationCellInfoGrid)
     }
   }
   const sourceRgbByCode = {}
