@@ -1,0 +1,56 @@
+[
+  {
+    "name": "cat",
+    "roi": [
+      20,
+      61,
+      81,
+      94
+    ],
+    "definition": "zero-based grid, half-open rectangle; identical manual ROI in before/after",
+    "before": {
+      "colorCount": 18,
+      "sameCodeIsolated": 321
+    },
+    "after": {
+      "colorCount": 18,
+      "sameCodeIsolated": 263
+    }
+  },
+  {
+    "name": "portrait",
+    "roi": [
+      36,
+      20,
+      55,
+      37
+    ],
+    "definition": "zero-based grid, half-open rectangle; identical manual ROI in before/after",
+    "before": {
+      "colorCount": 26,
+      "sameCodeIsolated": 46
+    },
+    "after": {
+      "colorCount": 25,
+      "sameCodeIsolated": 43
+    }
+  },
+  {
+    "name": "object",
+    "roi": [
+      35,
+      37,
+      66,
+      73
+    ],
+    "definition": "zero-based grid, half-open rectangle; identical manual ROI in before/after",
+    "before": {
+      "colorCount": 20,
+      "sameCodeIsolated": 54
+    },
+    "after": {
+      "colorCount": 20,
+      "sameCodeIsolated": 58
+    }
+  }
+]

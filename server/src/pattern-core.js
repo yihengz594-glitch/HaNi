@@ -24,6 +24,8 @@ const COLOR_VIVIDNESS = 1.16
 const COLOR_CONTRAST = 1.045
 // 继续保留误差扩散以保护细节，但降低扩散强度，避免相邻格子看起来像混色噪点。
 const DITHER_ERROR_SCALE = 0.52
+// 8邻域近色的严格上限；仅对非背景、非肤色、非细节保护格纠正孤点。
+const ISOLATED_NEIGHBOR_COLOR_DISTANCE = 48
 // 低色号色板必须保留肤色/白色的稳定锚点。只靠 RGB 最远点采样时，72 色容易
 // 选中黄色而漏掉浅肤色，随后脸部和手臂会被量化成黄块。
 const LOW_PALETTE_ANCHOR_CODES = [
@@ -211,6 +213,8 @@ convertToGrid(pixels, columns, rows) {
     // 量化前再按“白色 + 与四边连通”做一次格级清理：轮廓内的白色不会连到边缘，
     // 因此继续显示 H2 等色号；轮廓外的白底则留空，不参与色号统计和抖动。
     this.maskExternalWhiteBackground(cellInfoGrid)
+    // 仅供同次生成的最终描边后清理使用，不写入图纸输出。
+    this.quantizationCellInfoGrid = cellInfoGrid
     // 施工图必须使用真实 MARD 色板，而不是把照片里的 RGB 当成“拼豆色”。
     // 抖动负责把原图的明暗与细节分散到相邻网格，同时保证每格最终只有一种 MARD 纯色。
     const sourcePalette = this.getControlledQuantizationPalette(cellInfoGrid, this.getActivePalette())
@@ -965,13 +969,7 @@ applyFloydSteinbergDither(cellInfoGrid, sourcePalette) {
           // 五官、描线等深色结构不向四周强烈扩散误差，避免眼睛边缘长出杂乱黑点。
           // 肤色区域在 72 色下最容易被相邻黄色吸走；降低其误差扩散，
           // 防止上一格的量化误差把下一格推过肤色/黄色的色相边界。
-          const localDitherScale = skinHint
-            ? Math.min(0.08, ditherScale * 0.22)
-            : info.detailRgb
-            ? ditherScale * 0.42
-            : info.edgeStrength > 110 && cellCount <= 4096
-              ? ditherScale * 0.68
-              : ditherScale
+          const localDitherScale = this.getLocalDitherScale(info, skinHint, ditherScale, cellCount)
           const error = [
             (sourceRgb[0] - selected.rgb[0]) * localDitherScale,
             (sourceRgb[1] - selected.rgb[1]) * localDitherScale,
@@ -986,6 +984,49 @@ applyFloydSteinbergDither(cellInfoGrid, sourcePalette) {
       }
     }
     return this.stabilizeSkinColors(grid, cellInfoGrid, sourcePalette)
+  },
+
+getLocalDitherScale(info, skinHint, ditherScale, cellCount) {
+    // 肤色和深色细节优先，保持原有三重肤色/五官保护。
+    if (skinHint) return Math.min(0.08, ditherScale * 0.22)
+    if (info.detailRgb) return ditherScale * 0.42
+    const originalScale = info.edgeStrength > 110 && cellCount <= 4096
+      ? ditherScale * 0.68 : ditherScale
+    // 显式legacy构图是已有逐格回滚入口；保留该路径的历史图纸基线。
+    if (this.data.layoutMode === 'legacy') return originalScale
+    const chroma = Math.max(...info.average) - Math.min(...info.average)
+    // 104格宇航员/银猫/红杯核对：25/20使平坦区更干净，但脸部改善很小。
+    // 20/20、25/16均未保住全图纹理的稀有色；胸毛ROI仍18色，保留25/20/90。
+    // 现有原值最高0.52，纹理0.6上限通常不触发；未据此宣称增加毛发细节。
+    if (info.edgeStrength < 25 && chroma < 20) return originalScale * 0.5
+    if (info.edgeStrength > 90) return Math.min(0.6, originalScale)
+    return originalScale
+  },
+
+removeIsolatedColors(grid, cellInfoGrid) {
+    const rows = grid.length, columns = grid[0] ? grid[0].length : 0
+    const result = grid.map(row => row.slice())
+    for (let row = 0; row < rows; row += 1) {
+      for (let column = 0; column < columns; column += 1) {
+        const info = cellInfoGrid[row][column], color = result[row][column]
+        if (!info || !color || color.empty || info.backgroundCandidate || info.detailRgb || info.skinLike) continue
+        let nearest = null, nearestDistance = Infinity, hasCloseNeighbor = false
+        // 固定行优先顺序处理并列；在当前结果上纠正，已建立的近色邻接不会被交换打散。
+        for (let dy = -1; dy <= 1; dy += 1) for (let dx = -1; dx <= 1; dx += 1) {
+          if (!dy && !dx) continue
+          const y = row + dy, x = column + dx
+          if (y < 0 || x < 0 || y >= rows || x >= columns) continue
+          const neighbor = result[y][x]
+          if (!neighbor || neighbor.empty || cellInfoGrid[y][x].backgroundCandidate) continue
+          const distance = this.mardColorDistance(color.rgb, neighbor.rgb)
+          if (distance < ISOLATED_NEIGHBOR_COLOR_DISTANCE) hasCloseNeighbor = true
+          if (distance < nearestDistance) { nearest = neighbor; nearestDistance = distance }
+        }
+        // 无前景邻居时没有合法邻域色号可选，保留原格而不借用空白背景。
+        if (!hasCloseNeighbor && nearest) result[row][column] = this.makeMardColor(nearest, color.sourceRgb || info.average)
+      }
+    }
+    return result
   },
 
 stabilizeSkinColors(grid, cellInfoGrid, palette) {
@@ -1774,6 +1815,7 @@ export async function generatePattern(imageBuffer, settings) {
       const fitted = !isFixedBoard && runtime.data.layoutMode !== 'legacy' ? runtime.createNormalizedPixels(image, size) : normalized
       const rawGrid = runtime.convertToGrid(fitted.pixels, size.columns, size.rows)
       grid = runtime.applyCartoonOutline(rawGrid, fitted)
+      if (runtime.data.layoutMode !== 'legacy') grid = runtime.removeIsolatedColors(grid, runtime.quantizationCellInfoGrid)
     }
   }
   const sourceRgbByCode = {}
